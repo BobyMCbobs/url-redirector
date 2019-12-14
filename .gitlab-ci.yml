@@ -1,5 +1,18 @@
 stages:
+  - test
   - build
+
+test:
+  image: golang:1.13.4-buster
+  stage: test
+  before_script:
+    - go get -v -d ./...
+    - go install ./...
+    - go get -v github.com/onsi/ginkgo/ginkgo
+    - go get -v github.com/onsi/gomega/...
+    - go run main.go &
+  script:
+    - $GOPATH/bin/ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --progress ./test
 
 build:
   stage: build

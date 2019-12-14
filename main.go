@@ -89,6 +89,7 @@ func APIshortLink(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	redirectURL := configYAML[vars["link"]]
 	if redirectURL == "" {
+		w.WriteHeader(404)
 		return
 	}
 	http.Redirect(w, r, redirectURL, 302)
