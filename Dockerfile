@@ -6,10 +6,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflag
 FROM alpine:3.10
 WORKDIR /opt/redirector
 ENV PATH=/opt/redirector
-COPY --from=api /opt/redirector/redirector .
-COPY robots.txt /opt/redirector/robots.txt
 RUN /usr/sbin/adduser -D redirector
 RUN /bin/chown -R redirector /opt/redirector
+COPY --from=api /opt/redirector/redirector .
+COPY robots.txt /opt/redirector/robots.txt
 USER redirector
 EXPOSE 8080
 CMD ["/opt/redirector/redirector"]

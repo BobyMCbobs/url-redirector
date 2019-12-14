@@ -11,16 +11,19 @@ import (
 
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v2"
+	"github.com/olekukonko/tablewriter"
 )
 
 type DeploymentYAML map[string]string
 
 var (
-	deploymentYAMLlocation = GetDeploymentLocation()
-	logFileLocation        = GetLogFileLocation()
-	outfile, _             = os.OpenFile(logFileLocation, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-	logger                 = log.New(outfile, "", 3)
-	multiWriter            = io.MultiWriter(os.Stdout, outfile)
+	appPort                = GetAppPort()
+	appDeploymentYAMLlocation = GetDeploymentLocation()
+	appUseLogging          = os.Getenv("APP_USE_LOGGING")
+	appLogFileLocation        = GetLogFileLocation()
+	loggerOutFile, _             = os.OpenFile(appLogFileLocation, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+	logger                 = log.New(loggerOutFile, "", 3)
+	multiWriter            = io.MultiWriter(os.Stdout, loggerOutFile)
 )
 
 // determine the port for the app to run on
@@ -60,7 +63,7 @@ func RequestLogger(next http.Handler) http.Handler {
 
 // load and parse the config.yaml file
 func ReadDeploymentYAML() (output DeploymentYAML) {
-	yamlFile, err := ioutil.ReadFile(deploymentYAMLlocation)
+	yamlFile, err := ioutil.ReadFile(appDeploymentYAMLlocation)
 	if err != nil {
 		fmt.Printf("Error reading YAML file: %s\n", err)
 		return
@@ -75,10 +78,9 @@ func ReadDeploymentYAML() (output DeploymentYAML) {
 
 // check if the config.yaml exists
 func CheckForDeploymentYAML() {
-	if _, err := os.Stat(deploymentYAMLlocation); err != nil {
-		logger.Fatalf("File %v does not exist, please create or mount it.\n", deploymentYAMLlocation)
+	if _, err := os.Stat(appDeploymentYAMLlocation); err != nil {
+		logger.Fatalf("File %v does not exist, please create or mount it.\n", appDeploymentYAMLlocation)
 	}
-	logger.Printf("Using file %v as the deployment configuration\n", deploymentYAMLlocation)
 }
 
 // handle the url variables on /{link}
@@ -94,7 +96,6 @@ func APIshortLink(w http.ResponseWriter, r *http.Request) {
 
 // manage starting of webserver
 func HandleWebserver() {
-	port := GetAppPort()
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./robots.txt")
@@ -103,17 +104,38 @@ func HandleWebserver() {
 	router.Use(RequestLogger)
 	srv := &http.Server{
 		Handler:      router,
-		Addr:         port,
+		Addr:         appPort,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
 
-	logger.Println("Listening on", port)
+	logger.Println("Listening on", appPort)
 	logger.Fatal(srv.ListenAndServe())
 }
 
+func PrintEnvConfig() {
+	data := [][]string{
+		[]string{"APP_PORT", appPort},
+		[]string{"APP_CONFIG_YAML", appDeploymentYAMLlocation},
+		[]string{"APP_USE_LOGGING", appUseLogging},
+		[]string{"APP_LOG_FILE", appLogFileLocation},
+	}
+	
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Name", "Value"})
+	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+	table.SetCenterSeparator("|")
+	table.AppendBulk(data)
+	table.Render()
+	fmt.Println()
+}
+
 func main() {
-	logger.SetOutput(multiWriter)
+	if appUseLogging != "false" {
+		logger.SetOutput(multiWriter)
+	}
+	logger.Println("Warming up")
 	CheckForDeploymentYAML()
+	PrintEnvConfig()
 	HandleWebserver()
 }

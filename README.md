@@ -2,12 +2,16 @@
 
 > A simple golang + yaml URL redirector
 
-
 ## Definitions
+
 Example of `./config.yaml`
 ```yaml
 duck: https://duckduckgo.com
+gitlab: https://gitlab.com
+github: https://github.com
 ```
+
+Given the config above, if [`https://localhost:8080/duck`](https://localhost:8080/duck) is visited, it will redirect to [`https://duckduckgo.com`](https://duckduckgo.com).
 
 ## Local usage
 ```bash
@@ -24,14 +28,17 @@ Make sure you update the values in the yaml files
 ```bash
 kubectl apply -f k8s-deployment/
 ```
+### Notes
+- the ConfigMap can be updated at any time, give at least 1min for the patched version to be active
 
 ## Environment variables
 
-| Name | Purpose |
-| - | - |
-| `APP_PORT` | the port and interface which the app serves from |
-| `APP_CONFIG_YAML` | the location of where the config.yaml is (for the [routes](#definitions)) |
-| `APP_LOG_FILE` | the location of where a log file will be created and written to |
+| Name | Purpose | Example |
+| - | - | - |
+| `APP_PORT` | the port and interface which the app serves from | `:8080` |
+| `APP_CONFIG_YAML` | the location of where the config.yaml is (for the [routes](#definitions)) | `./cfg/config.yaml` |
+| `APP_USE_LOGGING` | toggle the saving of logs | `false` |
+| `APP_LOG_FILE` | the location of where a log file will be created and written to | `/var/log/url-redirector.log` |
 
 ## License
 Copyright 2019 Caleb Woodbine.
