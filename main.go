@@ -10,20 +10,20 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"gopkg.in/yaml.v2"
 	"github.com/olekukonko/tablewriter"
+	"gopkg.in/yaml.v2"
 )
 
-type DeploymentYAML map[string]string
+type ConfigYAML map[string]string
 
 var (
-	appPort                = GetAppPort()
-	appDeploymentYAMLlocation = GetDeploymentLocation()
-	appUseLogging          = os.Getenv("APP_USE_LOGGING")
-	appLogFileLocation        = GetLogFileLocation()
-	loggerOutFile, _             = os.OpenFile(appLogFileLocation, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-	logger                 = log.New(loggerOutFile, "", 3)
-	multiWriter            = io.MultiWriter(os.Stdout, loggerOutFile)
+	appPort               = GetAppPort()
+	appConfigYAMLlocation = GetDeploymentLocation()
+	appUseLogging         = os.Getenv("APP_USE_LOGGING")
+	appLogFileLocation    = GetLogFileLocation()
+	loggerOutFile, _      = os.OpenFile(appLogFileLocation, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+	logger                = log.New(loggerOutFile, "", 3)
+	multiWriter           = io.MultiWriter(os.Stdout, loggerOutFile)
 )
 
 // determine the port for the app to run on
@@ -62,8 +62,8 @@ func RequestLogger(next http.Handler) http.Handler {
 }
 
 // load and parse the config.yaml file
-func ReadDeploymentYAML() (output DeploymentYAML) {
-	yamlFile, err := ioutil.ReadFile(appDeploymentYAMLlocation)
+func ReadConfigYAML() (output ConfigYAML) {
+	yamlFile, err := ioutil.ReadFile(appConfigYAMLlocation)
 	if err != nil {
 		fmt.Printf("Error reading YAML file: %s\n", err)
 		return
@@ -77,17 +77,17 @@ func ReadDeploymentYAML() (output DeploymentYAML) {
 }
 
 // check if the config.yaml exists
-func CheckForDeploymentYAML() {
-	if _, err := os.Stat(appDeploymentYAMLlocation); err != nil {
-		logger.Fatalf("File %v does not exist, please create or mount it.\n", appDeploymentYAMLlocation)
+func CheckForConfigYAML() {
+	if _, err := os.Stat(appConfigYAMLlocation); err != nil {
+		logger.Fatalf("File %v does not exist, please create or mount it.\n", appConfigYAMLlocation)
 	}
 }
 
 // handle the url variables on /{link}
 func APIshortLink(w http.ResponseWriter, r *http.Request) {
-	deploymentYAML := ReadDeploymentYAML()
+	configYAML := ReadConfigYAML()
 	vars := mux.Vars(r)
-	redirectURL := deploymentYAML[vars["link"]]
+	redirectURL := configYAML[vars["link"]]
 	if redirectURL == "" {
 		return
 	}
@@ -116,11 +116,11 @@ func HandleWebserver() {
 func PrintEnvConfig() {
 	data := [][]string{
 		[]string{"APP_PORT", appPort},
-		[]string{"APP_CONFIG_YAML", appDeploymentYAMLlocation},
+		[]string{"APP_CONFIG_YAML", appConfigYAMLlocation},
 		[]string{"APP_USE_LOGGING", appUseLogging},
 		[]string{"APP_LOG_FILE", appLogFileLocation},
 	}
-	
+
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Name", "Value"})
 	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
@@ -135,7 +135,7 @@ func main() {
 		logger.SetOutput(multiWriter)
 	}
 	logger.Println("Warming up")
-	CheckForDeploymentYAML()
+	CheckForConfigYAML()
 	PrintEnvConfig()
 	HandleWebserver()
 }
