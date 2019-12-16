@@ -4,4 +4,5 @@ metadata:
   name: url-redirector-data
 data:
   config.yaml: |
-    duck: https://duckduckgo.com
+    routes:
+      duck: https://duckduckgo.com

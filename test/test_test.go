@@ -7,17 +7,21 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"gitlab.com/bobymcbobs/url-redirector/src/types"
 	"gopkg.in/yaml.v2"
 )
 
 var _ = Describe("API redirect tests", func() {
 	currentWorkingDirectory, _ := os.Getwd()
 	configStoreLocation := fmt.Sprintf("%v/%v/%v", currentWorkingDirectory, "..", "config.yaml")
-	configYAML := map[string]string{
-		"duck":   "https://duckduckgo.com",
-		"gitlab": "https://about.gitlab.com",
-		"github": "https://github.com",
+	configYAML := types.ConfigYAML{
+		Routes: types.Routes{
+			"duck":   "https://duckduckgo.com",
+			"gitlab": "https://about.gitlab.com",
+			"github": "https://github.com",
+		},
 	}
+
 	BeforeEach(func() {
 		file, err := os.Create(configStoreLocation)
 		Expect(err).To(BeNil())
@@ -29,10 +33,10 @@ var _ = Describe("API redirect tests", func() {
 	It("should redirect from a page to an url", func() {
 		By("visiting written redirect")
 		//pageRef := "duck"
-		for key, _ := range configYAML {
+		for key, _ := range configYAML.Routes {
 			resp, err := http.Get(fmt.Sprintf("http://localhost:8080/%v", key))
 			Expect(err).To(BeNil(), "Request should not return errors")
-			Expect(fmt.Sprintf("%v://%v", resp.Request.URL.Scheme, resp.Request.URL.Host)).To(Equal(configYAML[key]))
+			Expect(fmt.Sprintf("%v://%v", resp.Request.URL.Scheme, resp.Request.URL.Host)).To(Equal(configYAML.Routes[key]))
 		}
 	})
 

@@ -1,15 +1,15 @@
 FROM golang:1.13.4-alpine3.10 AS api
 WORKDIR /opt/redirector
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static" -s -w' -o redirector main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static" -s -w' -o redirector ./src
+RUN /usr/sbin/adduser -D redirector
 
-FROM alpine:3.10
+FROM scratch
 WORKDIR /opt/redirector
 ENV PATH=/opt/redirector
-RUN /usr/sbin/adduser -D redirector
-RUN /bin/chown -R redirector /opt/redirector
-COPY --from=api /opt/redirector/redirector .
 COPY robots.txt /opt/redirector/robots.txt
+COPY --from=api /opt/redirector/redirector .
+COPY --from=api /etc/passwd /etc/passwd
 USER redirector
 EXPOSE 8080
 CMD ["/opt/redirector/redirector"]

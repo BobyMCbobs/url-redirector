@@ -1,56 +1,53 @@
-package main
+package common
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
+	"github.com/olekukonko/tablewriter"
+	"gitlab.com/bobymcbobs/url-redirector/src/types"
+	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/gorilla/mux"
-	"github.com/olekukonko/tablewriter"
-	"gopkg.in/yaml.v2"
 )
-
-type ConfigYAML map[string]string
 
 var (
+	logger                = Logger()
 	appPort               = GetAppPort()
 	appConfigYAMLlocation = GetDeploymentLocation()
-	appUseLogging         = os.Getenv("APP_USE_LOGGING")
+	appUseLogging         = GetUseLogging()
 	appLogFileLocation    = GetLogFileLocation()
-	loggerOutFile, _      = os.OpenFile(appLogFileLocation, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-	logger                = log.New(loggerOutFile, "", 3)
-	multiWriter           = io.MultiWriter(os.Stdout, loggerOutFile)
 )
+
+// if an environment variable exists return it, otherwise return a default value
+func GetEnvOrDefault(envName string, defaultValue string) (output string) {
+	output = os.Getenv(envName)
+	if output == "" {
+		output = defaultValue
+	}
+	return output
+}
 
 // determine the port for the app to run on
 func GetAppPort() (output string) {
-	output = os.Getenv("APP_PORT")
-	if output == "" {
-		output = ":8080"
-	}
-	return output
+	return GetEnvOrDefault("APP_PORT", ":8080")
 }
 
 // determine the location of the config.yaml
 func GetDeploymentLocation() (output string) {
-	output = os.Getenv("APP_CONFIG_YAML")
-	if output == "" {
-		output = "./config.yaml"
-	}
-	return output
+	return GetEnvOrDefault("APP_CONFIG_YAML", "./config.yaml")
 }
 
-// determine the location of the config.yaml
+func GetUseLogging() (output string) {
+	return GetEnvOrDefault("APP_USE_LOGGING", "false")
+}
+
+// determine the location of the log file
 func GetLogFileLocation() (output string) {
-	output = os.Getenv("APP_LOG_FILE")
-	if output == "" {
-		output = "./redirector.log"
-	}
-	return output
+	return GetEnvOrDefault("APP_LOG_FILE", "./redirector.log")
 }
 
 // log all requests
@@ -62,7 +59,7 @@ func RequestLogger(next http.Handler) http.Handler {
 }
 
 // load and parse the config.yaml file
-func ReadConfigYAML() (output ConfigYAML) {
+func ReadConfigYAML() (output types.ConfigYAML) {
 	yamlFile, err := ioutil.ReadFile(appConfigYAMLlocation)
 	if err != nil {
 		fmt.Printf("Error reading YAML file: %s\n", err)
@@ -87,12 +84,43 @@ func CheckForConfigYAML() {
 func APIshortLink(w http.ResponseWriter, r *http.Request) {
 	configYAML := ReadConfigYAML()
 	vars := mux.Vars(r)
-	redirectURL := configYAML[vars["link"]]
+	redirectURL := configYAML.Routes[vars["link"]]
 	if redirectURL == "" {
 		w.WriteHeader(404)
 		return
 	}
 	http.Redirect(w, r, redirectURL, 302)
+}
+
+// print a table of the environment variables
+func PrintEnvConfig() {
+	fmt.Println()
+	data := [][]string{
+		[]string{"APP_PORT", appPort},
+		[]string{"APP_CONFIG_YAML", appConfigYAMLlocation},
+		[]string{"APP_USE_LOGGING", appUseLogging},
+		[]string{"APP_LOG_FILE", appLogFileLocation},
+	}
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Name", "Value"})
+	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+	table.SetCenterSeparator("|")
+	table.AppendBulk(data)
+	table.Render()
+	fmt.Println()
+}
+
+func Logger() *log.Logger {
+	logger := log.New(os.Stdout, "", 3)
+	if appUseLogging == "true" {
+		appLogFileLocation := GetLogFileLocation()
+		loggerOutFile, _ := os.OpenFile(appLogFileLocation, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+		logger = log.New(loggerOutFile, "", 3)
+		multiWriter := io.MultiWriter(os.Stdout, loggerOutFile)
+		logger.SetOutput(multiWriter)
+	}
+	return logger
 }
 
 // manage starting of webserver
@@ -112,31 +140,4 @@ func HandleWebserver() {
 
 	logger.Println("Listening on", appPort)
 	logger.Fatal(srv.ListenAndServe())
-}
-
-func PrintEnvConfig() {
-	data := [][]string{
-		[]string{"APP_PORT", appPort},
-		[]string{"APP_CONFIG_YAML", appConfigYAMLlocation},
-		[]string{"APP_USE_LOGGING", appUseLogging},
-		[]string{"APP_LOG_FILE", appLogFileLocation},
-	}
-
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Value"})
-	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
-	table.SetCenterSeparator("|")
-	table.AppendBulk(data)
-	table.Render()
-	fmt.Println()
-}
-
-func main() {
-	if appUseLogging != "false" {
-		logger.SetOutput(multiWriter)
-	}
-	logger.Println("Warming up")
-	CheckForConfigYAML()
-	PrintEnvConfig()
-	HandleWebserver()
 }

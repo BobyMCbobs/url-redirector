@@ -1,8 +1,8 @@
 # url-redirector
 
-> A simple golang + yaml URL redirector
+> A simple cloud-native golang + yaml URL redirector app
 
-## Definitions
+## Config definitions
 
 Example of `./config.yaml`
 ```yaml
@@ -33,12 +33,12 @@ kubectl apply -f k8s-deployment/
 
 ## Environment variables
 
-| Name | Purpose | Example |
+| Name | Purpose | Defaults |
 | - | - | - |
 | `APP_PORT` | the port and interface which the app serves from | `:8080` |
-| `APP_CONFIG_YAML` | the location of where the config.yaml is (for the [routes](#definitions)) | `./cfg/config.yaml` |
+| `APP_CONFIG_YAML` | the location of where the config.yaml is (for the [routes](#definitions)) | `./config.yaml` |
 | `APP_USE_LOGGING` | toggle the saving of logs | `false` |
-| `APP_LOG_FILE` | the location of where a log file will be created and written to | `/var/log/url-redirector.log` |
+| `APP_LOG_FILE` | the location of where a log file will be created and written to | `./redirector.log` |
 
 ## License
 Copyright 2019 Caleb Woodbine.

@@ -15,9 +15,13 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: url-redirector
-        image: registry.gitlab.com/bobymcbobs/url-redirector:latest
+        image: registry.gitlab.com/bobymcbobs/url-redirector:1.0.0
         securityContext:
           readOnlyRootFilesystem: true
+          privileged: false
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
         imagePullPolicy: Always
         ports:
           - containerPort: 8080
