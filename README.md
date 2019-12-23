@@ -6,9 +6,10 @@
 
 Example of `./config.yaml`
 ```yaml
-duck: https://duckduckgo.com
-gitlab: https://gitlab.com
-github: https://github.com
+routes:
+  duck: https://duckduckgo.com
+  gitlab: https://gitlab.com
+  github: https://github.com
 ```
 
 Given the config above, if [`https://localhost:8080/duck`](https://localhost:8080/duck) is visited, it will redirect to [`https://duckduckgo.com`](https://duckduckgo.com).
