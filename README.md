@@ -10,9 +10,11 @@ routes:
   duck: https://duckduckgo.com
   gitlab: https://gitlab.com
   github: https://github.com
+root: https://gitlab.com
+wildcard: https://github.com
 ```
 
-Given the config above, if [`https://localhost:8080/duck`](https://localhost:8080/duck) is visited, it will redirect to [`https://duckduckgo.com`](https://duckduckgo.com).
+Given the config above, if [`https://localhost:8080/duck`](https://localhost:8080/duck) is visited, the request will redirect to [`https://duckduckgo.com`](https://duckduckgo.com). If [`https://localhost:8080`](https://localhost:8080) is visited, the request will be redirected to [`https://gitlab.com`](https://gitlab.com). If the path that doesn't exist is visited, the request will be redirected to [`https://github.com`](https://github.com).
 
 ## Local usage
 ```bash

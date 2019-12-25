@@ -1,2 +1,6 @@
-duck: https://duckduckgo.com
-gitlab: https://gitlab.com
+routes:
+  duck: https://duckduckgo.com
+  github: https://github.com
+  gitlab: https://about.gitlab.com
+root: https://about.gitlab.com
+wildcard: https://github.com

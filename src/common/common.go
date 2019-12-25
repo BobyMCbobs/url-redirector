@@ -86,10 +86,26 @@ func APIshortLink(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	redirectURL := configYAML.Routes[vars["link"]]
 	if redirectURL == "" {
-		w.WriteHeader(404)
-		return
+		if configYAML.Wildcard == "" {
+			w.WriteHeader(404)
+			w.Write([]byte(`404 page not found`))
+			return
+		} else {
+			http.Redirect(w, r, configYAML.Wildcard, 302)
+			return
+		}
 	}
 	http.Redirect(w, r, redirectURL, 302)
+}
+
+func APIroot(w http.ResponseWriter, r *http.Request) {
+	configYAML := ReadConfigYAML()
+	if configYAML.Root == "" {
+		w.WriteHeader(404)
+		w.Write([]byte(`404 page not found`))
+		return
+	}
+	http.Redirect(w, r, configYAML.Root, 302)
 }
 
 // print a table of the environment variables
@@ -104,8 +120,17 @@ func PrintEnvConfig() {
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Name", "Value"})
-	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
-	table.SetCenterSeparator("|")
+	table.SetAutoWrapText(false)
+	table.SetAutoFormatHeaders(true)
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetCenterSeparator("")
+	table.SetColumnSeparator("")
+	table.SetRowSeparator("")
+	table.SetHeaderLine(false)
+	table.SetBorder(false)
+	table.SetTablePadding("\t")
+	table.SetNoWhiteSpace(true)
 	table.AppendBulk(data)
 	table.Render()
 	fmt.Println()
@@ -130,6 +155,7 @@ func HandleWebserver() {
 		http.ServeFile(w, r, "./robots.txt")
 	})
 	router.HandleFunc("/{link:[a-zA-Z0-9]+}", APIshortLink)
+	router.HandleFunc("/", APIroot)
 	router.Use(RequestLogger)
 	srv := &http.Server{
 		Handler:      router,
