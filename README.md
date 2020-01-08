@@ -17,6 +17,7 @@
 - simple YAML configuration
 - restart-free configuration updating (only redeploy the ConfigMap)
 - TLS/SSL support
+- \>3MB container image
 
 ## Config definitions
 

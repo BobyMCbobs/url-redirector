@@ -2,11 +2,11 @@ FROM golang:1.13.4-alpine3.10 AS api
 WORKDIR /app
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static" -s -w' -o redirector ./src
-RUN /usr/sbin/adduser -D redirector
+RUN /usr/sbin/adduser -h /app -D redirector
 
 FROM alpine:3.11.2
 WORKDIR /app
-ENV PATH=/app:/bin:/usr/bin
+ENV PATH=/app:/bin:/usr/bin:/usr/sbin
 COPY robots.txt /app/robots.txt
 COPY --from=api /app/redirector .
 COPY --from=api /etc/passwd /etc/passwd
