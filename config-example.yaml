@@ -1,6 +1,21 @@
-routes:
-  duck: https://duckduckgo.com
-  github: https://github.com
-  gitlab: https://about.gitlab.com
-root: https://about.gitlab.com
-wildcard: https://github.com
+'*':
+  routes:
+    a: https://about.gitlab.com
+    b: https://github.com
+    c: https://duckduckgo.com
+  root: https://reddit.com
+  wildcard: https://github.com
+localhost:
+  routes:
+    a: https://duckduckgo.com
+    b: https://reddit.com
+    c: https://github.com
+  root: https://about.gitlab.com
+  wildcard: https://github.com
+localhost2:
+  routes:
+    a: https://about.gitlab.com
+    b: https://duckduckgo.com
+    c: https://github.com
+  root: https://reddit.com
+  wildcard: https://github.com

@@ -17,6 +17,10 @@ import (
 var (
 	logger                = Logger()
 	appPort               = GetAppPort()
+	appPortTLS            = GetAppPortTLS()
+	appUseTLS             = GetAppUseTLS()
+	appTLSpublicCert      = GetAppTLSpublicCert()
+	appTLSprivateCert     = GetAppTLSprivateCert()
 	appConfigYAMLlocation = GetDeploymentLocation()
 	appUseLogging         = GetUseLogging()
 	appLogFileLocation    = GetLogFileLocation()
@@ -36,6 +40,26 @@ func GetAppPort() (output string) {
 	return GetEnvOrDefault("APP_PORT", ":8080")
 }
 
+// determine the tls port for the app to run on
+func GetAppPortTLS() (output string) {
+	return GetEnvOrDefault("APP_PORT_TLS", ":4433")
+}
+
+// determine if the app should host with TLS
+func GetAppUseTLS() (output string) {
+	return GetEnvOrDefault("APP_USE_TLS", "false")
+}
+
+// determine path to the public SSL cert
+func GetAppTLSpublicCert() (output string) {
+	return GetEnvOrDefault("APP_TLS_PUBLIC_CERT", "server.crt")
+}
+
+// determine path to the private SSL cert
+func GetAppTLSprivateCert() (output string) {
+	return GetEnvOrDefault("APP_TLS_PRIVATE_CERT", "server.key")
+}
+
 // determine the location of the config.yaml
 func GetDeploymentLocation() (output string) {
 	return GetEnvOrDefault("APP_CONFIG_YAML", "./config.yaml")
@@ -50,16 +74,36 @@ func GetLogFileLocation() (output string) {
 	return GetEnvOrDefault("APP_LOG_FILE", "./redirector.log")
 }
 
+// returns the request host
+func GetRequestHost(r *http.Request) string {
+	return r.Host
+}
+
+// determine if there is config available for the host
+func GetConfigHost(configYAML types.RouteHosts, r *http.Request) (useHost string) {
+	requestHost := GetRequestHost(r)
+	// if the host has no routes
+	if len(configYAML[requestHost].Routes) == 0 {
+		// if the wildcard host has no routes
+		if len(configYAML["*"].Routes) == 0 && configYAML["*"].Root == "" && configYAML["*"].Wildcard == "" {
+			return ""
+		} else {
+			return "*"
+		}
+	}
+	return requestHost
+}
+
 // log all requests
 func RequestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logger.Printf("%v %v %v %v %v %v %v", r.Header["User-Agent"], r.Method, r.URL, r.Proto, r.Response, r.RemoteAddr, r.Header)
+		logger.Printf("%v %v %v %v %v %v %v %v", r.Header["User-Agent"], r.Method, r.Host, r.URL, r.Proto, r.Response, r.RemoteAddr, r.Header)
 		next.ServeHTTP(w, r)
 	})
 }
 
 // load and parse the config.yaml file
-func ReadConfigYAML() (output types.ConfigYAML) {
+func ReadConfigYAML() (output types.RouteHosts) {
 	yamlFile, err := ioutil.ReadFile(appConfigYAMLlocation)
 	if err != nil {
 		fmt.Printf("Error reading YAML file: %s\n", err)
@@ -81,31 +125,35 @@ func CheckForConfigYAML() {
 }
 
 // handle the url variables on /{link}
-func APIshortLink(w http.ResponseWriter, r *http.Request) {
+func APIroutesHandler(w http.ResponseWriter, r *http.Request) {
 	configYAML := ReadConfigYAML()
 	vars := mux.Vars(r)
-	redirectURL := configYAML.Routes[vars["link"]]
+	requestHost := GetConfigHost(configYAML, r)
+	redirectURL := configYAML[requestHost].Routes[vars["link"]]
+	fmt.Println(redirectURL)
 	if redirectURL == "" {
-		if configYAML.Wildcard == "" {
+		if configYAML[requestHost].Wildcard == "" {
 			w.WriteHeader(404)
 			w.Write([]byte(`404 page not found`))
 			return
 		} else {
-			http.Redirect(w, r, configYAML.Wildcard, 302)
+			http.Redirect(w, r, configYAML[requestHost].Wildcard, 302)
 			return
 		}
 	}
 	http.Redirect(w, r, redirectURL, 302)
 }
 
-func APIroot(w http.ResponseWriter, r *http.Request) {
+// handle root requests
+func APIrootRouteHandler(w http.ResponseWriter, r *http.Request) {
 	configYAML := ReadConfigYAML()
-	if configYAML.Root == "" {
+	requestHost := GetConfigHost(configYAML, r)
+	if configYAML[requestHost].Root == "" {
 		w.WriteHeader(404)
 		w.Write([]byte(`404 page not found`))
 		return
 	}
-	http.Redirect(w, r, configYAML.Root, 302)
+	http.Redirect(w, r, configYAML[requestHost].Root, 302)
 }
 
 // print a table of the environment variables
@@ -116,6 +164,9 @@ func PrintEnvConfig() {
 		[]string{"APP_CONFIG_YAML", appConfigYAMLlocation},
 		[]string{"APP_USE_LOGGING", appUseLogging},
 		[]string{"APP_LOG_FILE", appLogFileLocation},
+		[]string{"APP_USE_TLS", appUseTLS},
+		[]string{"APP_TLS_PUBLIC_CERT", appTLSpublicCert},
+		[]string{"APP_TLS_PRIVATE_CERT", appTLSprivateCert},
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
@@ -136,6 +187,7 @@ func PrintEnvConfig() {
 	fmt.Println()
 }
 
+// request file logger
 func Logger() *log.Logger {
 	logger := log.New(os.Stdout, "", 3)
 	if appUseLogging == "true" {
@@ -154,8 +206,8 @@ func HandleWebserver() {
 	router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./robots.txt")
 	})
-	router.HandleFunc("/{link:[a-zA-Z0-9]+}", APIshortLink)
-	router.HandleFunc("/", APIroot)
+	router.HandleFunc("/{link:[a-zA-Z0-9]+}", APIroutesHandler)
+	router.HandleFunc("/", APIrootRouteHandler)
 	router.Use(RequestLogger)
 	srv := &http.Server{
 		Handler:      router,
@@ -164,6 +216,12 @@ func HandleWebserver() {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	logger.Println("Listening on", appPort)
-	logger.Fatal(srv.ListenAndServe())
+	if appUseTLS == "true" {
+		logger.Println("Listening on", appPortTLS)
+		srv.Addr = appPortTLS
+		logger.Fatal(srv.ListenAndServeTLS(appTLSpublicCert, appTLSprivateCert))
+	} else {
+		logger.Println("Listening on", appPort)
+		logger.Fatal(srv.ListenAndServe())
+	}
 }

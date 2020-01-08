@@ -21,6 +21,7 @@ build:
     name: gcr.io/kaniko-project/executor:debug-v0.13.0
     entrypoint: [""]
   script:
-    - if [ -n "$CI_COMMIT_TAG" ]; then KANIKO_EXTA_DESTINATION="--destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"; fi
+    - if [ -n "$CI_COMMIT_TAG" ]; then KANIKO_EXTRA_DESTINATION="--destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"; KANIKO_EXTRA_DESTINATION_ALPINE="--destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG-alpine"; fi
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:latest $KANIKO_EXTA_DESTINATION
+    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:latest $KANIKO_EXTRA_DESTINATION
+    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile.alpine --destination $CI_REGISTRY_IMAGE:latest-alpine $KANIKO_EXTRA_DESTINATION_ALPINE

@@ -31,10 +31,10 @@ spec:
           - name: APP_PORT
             value: ":8080"
           - name: APP_CONFIG_YAML
-            value: /opt/redirector/cfg/config.yaml
+            value: /app/cfg/config.yaml
         volumeMounts:
           - name: url-redirector-data
-            mountPath: /opt/redirector/cfg
+            mountPath: /app/cfg
         readinessProbe:
           tcpSocket:
             port: 8080

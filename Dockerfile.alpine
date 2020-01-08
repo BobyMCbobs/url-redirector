@@ -4,9 +4,9 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static" -s -w' -o redirector ./src
 RUN /usr/sbin/adduser -D redirector
 
-FROM scratch
+FROM alpine:3.11.2
 WORKDIR /app
-ENV PATH=/app
+ENV PATH=/app:/bin:/usr/bin
 COPY robots.txt /app/robots.txt
 COPY --from=api /app/redirector .
 COPY --from=api /etc/passwd /etc/passwd

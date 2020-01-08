@@ -4,5 +4,10 @@ metadata:
   name: url-redirector-data
 data:
   config.yaml: |
-    routes:
-      duck: https://duckduckgo.com
+    '*':
+      routes:
+        a: https://about.gitlab.com
+        b: https://github.com
+        c: https://duckduckgo.com
+      root: https://reddit.com
+      wildcard: https://github.com
