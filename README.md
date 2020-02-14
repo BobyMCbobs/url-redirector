@@ -1,7 +1,7 @@
 <a href="http://www.gnu.org/licenses/gpl-3.0.html">
     <img src="https://img.shields.io/badge/License-GPL%20v3-blue.svg" alt="License" />
 </a>
-<a href="https://gitlab.com/flattrack/flattrack.io/releases">
+<a href="https://gitlab.com/BobyMCbobs/url-redirector/releases">
     <img src="https://img.shields.io/badge/version-1.3.0-brightgreen.svg" />
 </a>
 
