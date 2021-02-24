@@ -15,7 +15,7 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: url-redirector
-        image: registry.gitlab.com/bobymcbobs/url-redirector:1.0.0
+        image: registry.gitlab.com/bobymcbobs/url-redirector:latest
         securityContext:
           readOnlyRootFilesystem: true
           privileged: false
