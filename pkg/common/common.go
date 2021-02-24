@@ -1,3 +1,18 @@
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the Affero GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the Affero GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// Package common ...
+// generally used functions
 package common
 
 import (
@@ -56,6 +71,7 @@ func GetAppBuildMode() string {
 	return AppBuildMode
 }
 
+// GetEnvOrDefault ...
 // if an environment variable exists return it, otherwise return a default value
 func GetEnvOrDefault(envName string, defaultValue string) (output string) {
 	output = os.Getenv(envName)
@@ -65,50 +81,60 @@ func GetEnvOrDefault(envName string, defaultValue string) (output string) {
 	return output
 }
 
+// GetAppPort ...
 // determine the port for the app to run on
 func GetAppPort() (output string) {
 	return GetEnvOrDefault("APP_PORT", ":8080")
 }
 
+// GetAppPortTLS ...
 // determine the tls port for the app to run on
 func GetAppPortTLS() (output string) {
 	return GetEnvOrDefault("APP_PORT_TLS", ":4433")
 }
 
+// GetAppUseTLS ...
 // determine if the app should host with TLS
 func GetAppUseTLS() (output string) {
 	return GetEnvOrDefault("APP_USE_TLS", "false")
 }
 
+// GetAppTLSpublicCert ...
 // determine path to the public SSL cert
 func GetAppTLSpublicCert() (output string) {
 	return GetEnvOrDefault("APP_TLS_PUBLIC_CERT", "server.crt")
 }
 
+// GetAppTLSprivateCert ...
 // determine path to the private SSL cert
 func GetAppTLSprivateCert() (output string) {
 	return GetEnvOrDefault("APP_TLS_PRIVATE_CERT", "server.key")
 }
 
+// GetDeploymentLocation ...
 // determine the location of the config.yaml
 func GetDeploymentLocation() (output string) {
 	return GetEnvOrDefault("APP_CONFIG_YAML", "./config.yaml")
 }
 
+// GetUseLogging ...
 func GetUseLogging() (output string) {
 	return GetEnvOrDefault("APP_USE_LOGGING", "false")
 }
 
+// GetLogFileLocation ...
 // determine the location of the log file
 func GetLogFileLocation() (output string) {
 	return GetEnvOrDefault("APP_LOG_FILE", "./redirector.log")
 }
 
+// GetRequestHost
 // returns the request host
 func GetRequestHost(r *http.Request) string {
 	return r.Host
 }
 
+// GetConfigHost
 // determine if there is config available for the host
 func GetConfigHost(configYAML types.RouteHosts, r *http.Request) (useHost string) {
 	requestHost := GetRequestHost(r)
@@ -117,13 +143,13 @@ func GetConfigHost(configYAML types.RouteHosts, r *http.Request) (useHost string
 		// if the wildcard host has no routes
 		if len(configYAML["*"].Routes) == 0 && configYAML["*"].Root == "" && configYAML["*"].Wildcard == "" {
 			return ""
-		} else {
-			return "*"
 		}
+		return "*"
 	}
 	return requestHost
 }
 
+// RequestLogger ...
 // log all requests
 func RequestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -132,6 +158,7 @@ func RequestLogger(next http.Handler) http.Handler {
 	})
 }
 
+// ReadConfigYAML ...
 // load and parse the config.yaml file
 func ReadConfigYAML() (output types.RouteHosts) {
 	yamlFile, err := ioutil.ReadFile(appConfigYAMLlocation)
@@ -147,6 +174,7 @@ func ReadConfigYAML() (output types.RouteHosts) {
 	return output
 }
 
+// CheckForConfigYAML ...
 // check if the config.yaml exists
 func CheckForConfigYAML() {
 	if _, err := os.Stat(appConfigYAMLlocation); err != nil {
@@ -154,6 +182,7 @@ func CheckForConfigYAML() {
 	}
 }
 
+// APIroutesHandler ...
 // handle the url variables on /{link}
 func APIroutesHandler(w http.ResponseWriter, r *http.Request) {
 	configYAML := ReadConfigYAML()
@@ -166,14 +195,14 @@ func APIroutesHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(404)
 			w.Write([]byte(`404 page not found`))
 			return
-		} else {
-			http.Redirect(w, r, configYAML[requestHost].Wildcard, 302)
-			return
 		}
+		http.Redirect(w, r, configYAML[requestHost].Wildcard, 302)
+		return
 	}
 	http.Redirect(w, r, redirectURL, 302)
 }
 
+// APIrootRouteHandler ...
 // handle root requests
 func APIrootRouteHandler(w http.ResponseWriter, r *http.Request) {
 	configYAML := ReadConfigYAML()
@@ -186,6 +215,7 @@ func APIrootRouteHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, configYAML[requestHost].Root, 302)
 }
 
+// PrintEnvConfig ...
 // print a table of the environment variables
 func PrintEnvConfig() {
 	fmt.Println()
@@ -217,6 +247,7 @@ func PrintEnvConfig() {
 	fmt.Println()
 }
 
+// Logger ...
 // request file logger
 func Logger() *log.Logger {
 	logger := log.New(os.Stdout, "", 3)
@@ -230,6 +261,7 @@ func Logger() *log.Logger {
 	return logger
 }
 
+// HandleWebserver ...
 // manage starting of webserver
 func HandleWebserver() {
 	router := mux.NewRouter().StrictSlash(true)
