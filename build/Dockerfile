@@ -1,10 +1,19 @@
 FROM golang:1.13.4-alpine3.10 AS build
 WORKDIR /app
 COPY . .
+ARG AppBuildVersion="0.0.0"
+ARG AppBuildHash="???"
+ARG AppBuildDate="???"
+ARG AppBuildMode="development"
+ARG GOARCH=""
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -a \
     -installsuffix cgo \
-    -ldflags '-extldflags "-static" -s -w' \
+    -ldflags "-extldflags '-static' -s -w \
+      -X gitlab.com/bobymcbobs/url-redirector/pkg/common.AppBuildVersion=$AppBuildVersion \
+      -X gitlab.com/bobymcbobs/url-redirector/pkg/common.AppBuildHash=$AppBuildHash \
+      -X gitlab.com/bobymcbobs/url-redirector/pkg/common.AppBuildDate=$AppBuildDate \
+      -X gitlab.com/bobymcbobs/url-redirector/pkg/common.AppBuildMode=$AppBuildMode" \
     -o redirector \
     main.go
 RUN apk add --no-cache tzdata ca-certificates

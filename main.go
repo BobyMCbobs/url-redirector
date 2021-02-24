@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	common.Logger().Println("Warming up")
+	common.Logger().Printf("launching url-redirector (%v, %v, %v, %v)\n", common.GetAppBuildVersion(), common.GetAppBuildHash(), common.GetAppBuildDate(), common.GetAppBuildMode())
 	common.CheckForConfigYAML()
 	common.PrintEnvConfig()
 	common.HandleWebserver()

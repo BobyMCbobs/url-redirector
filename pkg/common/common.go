@@ -14,7 +14,13 @@ import (
 	"time"
 )
 
+// AppVars ...
+// defaults
 var (
+	AppBuildVersion       = "0.0.0"
+	AppBuildHash          = "???"
+	AppBuildDate          = "???"
+	AppBuildMode          = "development"
 	logger                = Logger()
 	appPort               = GetAppPort()
 	appPortTLS            = GetAppPortTLS()
@@ -25,6 +31,30 @@ var (
 	appUseLogging         = GetUseLogging()
 	appLogFileLocation    = GetLogFileLocation()
 )
+
+// GetAppBuildVersion ...
+// return the version of the current FlatTrack instance
+func GetAppBuildVersion() string {
+	return AppBuildVersion
+}
+
+// GetAppBuildHash ...
+// return the commit which the current FlatTrack binary was built from
+func GetAppBuildHash() string {
+	return AppBuildHash
+}
+
+// GetAppBuildDate ...
+// return the build date of FlatTrack
+func GetAppBuildDate() string {
+	return AppBuildDate
+}
+
+// GetAppBuildMode ...
+// return the mode that the app is built in
+func GetAppBuildMode() string {
+	return AppBuildMode
+}
 
 // if an environment variable exists return it, otherwise return a default value
 func GetEnvOrDefault(envName string, defaultValue string) (output string) {
