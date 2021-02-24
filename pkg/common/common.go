@@ -128,13 +128,13 @@ func GetLogFileLocation() (output string) {
 	return GetEnvOrDefault("APP_LOG_FILE", "./redirector.log")
 }
 
-// GetRequestHost
+// GetRequestHost ...
 // returns the request host
 func GetRequestHost(r *http.Request) string {
 	return r.Host
 }
 
-// GetConfigHost
+// GetConfigHost ...
 // determine if there is config available for the host
 func GetConfigHost(configYAML types.RouteHosts, r *http.Request) (useHost string) {
 	requestHost := GetRequestHost(r)
