@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gitlab.com/bobymcbobs/url-redirector/src/common"
+	"gitlab.com/bobymcbobs/url-redirector/pkg/common"
 )
 
 func main() {

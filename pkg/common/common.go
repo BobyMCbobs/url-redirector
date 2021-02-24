@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/olekukonko/tablewriter"
-	"gitlab.com/bobymcbobs/url-redirector/src/types"
+	"gitlab.com/bobymcbobs/url-redirector/pkg/types"
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
