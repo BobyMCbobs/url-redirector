@@ -1,4 +1,5 @@
 stages:
+  - lint
   - test
   - build
 
@@ -90,3 +91,16 @@ build-container-arm64:
   only:
     - tags
     - master
+
+lint:
+  stage: lint
+  image: golang:1.13.10-alpine3.11
+  allow_failure: true
+  before_script:
+    - apk add git gcc
+    - go get -u golang.org/x/lint/golint
+  script:
+    - echo -e "GOLINT\n"
+    - golint -set_exit_status ./...
+    - echo -e "GOFMT\n"
+    - gofmt -d .
