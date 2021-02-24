@@ -2,6 +2,56 @@ stages:
   - test
   - build
 
+include:
+  template: Dependency-Scanning.gitlab-ci.yml
+
+variables:
+  ARCH_DEFAULT: "amd64"
+  ARCHES: amd64 arm64
+  APP_BUILD_VERSION: 0.0.0
+  APP_BUILD_MODE: development
+
+.kaniko-build-pre-script: &kaniko-build-pre-script |
+  set -x
+  mkdir -p /kaniko/.docker
+  echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+
+.kaniko-build-taggable-name: &kaniko-build-taggable-name |
+  set -x
+  COMMIT_HASH="???"
+  BUILD_DATE="$(date -u +%Y-%m-%d_%I:%M:%S%p)"
+  if [[ -z "$CI_COMMIT_TAG" ]]; then
+    COMMIT_HASH="$CI_COMMIT_SHORT_SHA"
+    PRINTABLE_COMMIT_HASH="-$COMMIT_HASH"
+  fi
+  if [[ ! "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]] && [[ -z "$CI_COMMIT_TAG" ]]; then
+    BRANCH_NAME="-$CI_COMMIT_BRANCH"
+  fi
+  ARCH_TAGGABLE_NAME="$(echo $ARCH | tr -d '/')"
+  if [[ ! "$ARCH" = "$ARCH_DEFAULT" ]]; then
+    PRINT_ARCH="-$ARCH_TAGGABLE_NAME"
+  fi
+
+.kaniko-pre-build-release-version: &kaniko-pre-build-release-version |
+  if [[ ! -z "$CI_COMMIT_TAG" ]]; then
+    export APP_BUILD_VERSION="$CI_COMMIT_TAG"
+    export APP_BUILD_MODE=production
+    export KANIKO_EXTRA_DESTINATION="--destination $CI_REGISTRY_IMAGE:$APP_BUILD_VERSION$PRINT_ARCH"
+  fi
+
+.kaniko-build: &kaniko-build |
+  /kaniko/executor \
+    --snapshotMode=redo \
+    --context $CI_PROJECT_DIR \
+    --dockerfile $CI_PROJECT_DIR/build/Dockerfile \
+    --destination $CI_REGISTRY_IMAGE:latest$BRANCH_NAME$PRINT_ARCH \
+    $KANIKO_EXTRA_DESTINATION \
+    --build-arg GOARCH="$ARCH" \
+    --build-arg AppBuildVersion="$APP_BUILD_VERSION" \
+    --build-arg AppBuildDate="$BUILD_DATE" \
+    --build-arg AppBuildHash="$COMMIT_HASH" \
+    --build-arg AppBuildMode="$APP_BUILD_MODE"
+
 test:
   image: golang:1.13.4-buster
   stage: test
@@ -15,13 +65,28 @@ test:
   script:
     - $GOPATH/bin/ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --progress ./test
 
-build:
+.build-container: &build-container
   stage: build
   image:
-    name: gcr.io/kaniko-project/executor:debug-v0.13.0
+    name: gcr.io/kaniko-project/executor:debug-v1.3.0
     entrypoint: [""]
+  retry: 2
+  before_script:
+    - *kaniko-build-pre-script
+    - *kaniko-build-taggable-name
+    - *kaniko-pre-build-release-version
   script:
-    - if [ -n "$CI_COMMIT_TAG" ]; then KANIKO_EXTRA_DESTINATION="--destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"; KANIKO_EXTRA_DESTINATION_ALPINE="--destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG-alpine"; fi
-    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:latest $KANIKO_EXTRA_DESTINATION
-    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile.alpine --destination $CI_REGISTRY_IMAGE:latest-alpine $KANIKO_EXTRA_DESTINATION_ALPINE
+    - *kaniko-build
+
+build-container-amd64:
+  <<: *build-container
+  variables:
+    ARCH: "amd64"
+
+build-container-arm64:
+  <<: *build-container
+  variables:
+    ARCH: "arm64"
+  only:
+    - tags
+    - master
