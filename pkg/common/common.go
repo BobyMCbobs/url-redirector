@@ -268,7 +268,7 @@ func HandleWebserver() {
 	router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./robots.txt")
 	})
-	router.HandleFunc("/{link:[a-zA-Z0-9]+}", APIroutesHandler)
+	router.HandleFunc("/{link:[a-zA-Z0-9:./@_]+}", APIroutesHandler)
 	router.HandleFunc("/", APIrootRouteHandler)
 	router.Use(RequestLogger)
 	srv := &http.Server{
