@@ -57,6 +57,8 @@ For more examples, check out [docs/EXAMPLES.md](docs/EXAMPLES.md)
 docker run -it --rm -v "$PWD"/config.yaml:/app/config.yaml:z,ro -p 8080:8080 registry.gitlab.com/bobymcbobs/url-redirector:latest
 ```
 
+Note: arm64 images are available as _\*-arm64_ (e.g: _latest-arm64_, _1.4.0-arm64_, etc...)
+
 ## Building
 ```bash
 docker build -t registry.gitlab.com/bobymcbobs/url-redirector:latest .
@@ -85,6 +87,6 @@ kubectl apply -f k8s-deployment/
 | `APP_LOG_FILE` | the location of where a log file will be created and written to | `./redirector.log` |
 
 ## License
-Copyright 2019 Caleb Woodbine.
-This project is licensed under the [GPL-3.0](http://www.gnu.org/licenses/gpl-3.0.html) and is [Free Software](https://www.gnu.org/philosophy/free-sw.en.html).
+Copyright 2019-2021 Caleb Woodbine.
+This project is licensed under the [AGPL-3.0](http://www.gnu.org/licenses/agpl-3.0.html) and is [Free Software](https://www.gnu.org/philosophy/free-sw.en.html).
 This program comes with absolutely no warranty.
