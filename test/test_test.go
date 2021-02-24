@@ -7,7 +7,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"gitlab.com/bobymcbobs/url-redirector/src/types"
+	"gitlab.com/bobymcbobs/url-redirector/pkg/types"
 	"gopkg.in/yaml.v2"
 )
 
