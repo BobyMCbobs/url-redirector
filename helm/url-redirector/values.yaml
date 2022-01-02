@@ -64,7 +64,7 @@ env:
   - name: APP_CONFIG_YAML
     value: /app/cfg/config.yaml
 
-config: |
+appConfig: |
   '*':
     routes:
       a: https://about.gitlab.com
