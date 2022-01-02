@@ -45,14 +45,16 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 10 }}
           {{- end }}
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
           readinessProbe:
-            httpGet:
-              path: /
-              port: http
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 1
+            periodSeconds: 20
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.volumes }}
