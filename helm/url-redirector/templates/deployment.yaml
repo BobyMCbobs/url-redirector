@@ -46,12 +46,14 @@ spec:
             {{- toYaml . | nindent 10 }}
           {{- end }}
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /robots.txt
               port: 8080
             initialDelaySeconds: 2
             periodSeconds: 10
           livenessProbe:
-            tcpSocket:
+            httpGet:
+              path: /robots.txt
               port: 8080
             initialDelaySeconds: 1
             periodSeconds: 20
