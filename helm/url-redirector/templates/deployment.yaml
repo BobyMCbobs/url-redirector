@@ -35,7 +35,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: {{ .Values.service.port }}
               protocol: TCP
           {{- with .Values.env }}
           env:
@@ -48,13 +48,13 @@ spec:
           readinessProbe:
             httpGet:
               path: /robots.txt
-              port: 8080
+              port: {{ .Values.service.port }}
             initialDelaySeconds: 2
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /robots.txt
-              port: 8080
+              port: {{ .Values.service.port }}
             initialDelaySeconds: 1
             periodSeconds: 20
           resources:
