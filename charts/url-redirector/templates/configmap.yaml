@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: url-redirector-data
+data:
+  {{- with .Values.appConfig }}
+  config.yaml:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
