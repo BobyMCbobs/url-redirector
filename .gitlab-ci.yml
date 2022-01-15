@@ -61,6 +61,8 @@ variables:
 test:
   image: $IMAGE_GOLANG_ALPINE
   stage: test
+  variables:
+    CGO_ENABLED: "0"
   before_script:
     - apk add --no-cache git gcc
     - go get -v ./...
@@ -68,7 +70,7 @@ test:
     - touch config.yaml
     - go run main.go &
   script:
-    - $GOPATH/bin/ginkgo -r --randomize-all --randomize-suites --fail-on-pending --cover --trace --race --progress ./test
+    - $GOPATH/bin/ginkgo -r --randomize-all --randomize-suites --fail-on-pending --cover --trace --progress ./test
 
 .build-container: &build-container
   stage: build
