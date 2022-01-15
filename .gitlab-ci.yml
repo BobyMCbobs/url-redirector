@@ -94,9 +94,46 @@ build-container-arm64:
     - tags
     - master
 
+tag-container-image:
+  stage: post-build
+  image: $IMAGE_DOCKER
+  before_script:
+    - *kaniko-build-pre-script
+    - *kaniko-build-taggable-name
+    - *kaniko-pre-build-release-version
+  script:
+    - |
+        set -x
+        cp -rf /kaniko/.docker $HOME/.docker
+        if [[ -z "$CI_COMMIT_TAG" ]]; then
+          APP_BUILD_VERSION=
+        fi
+        for tag in $APP_BUILD_VERSION latest$BRANCH_NAME; do
+          for reg in $REGISTRIES; do
+            export IMAGE_TAG_WITH_ARCH=""
+            for arch in $ARCHES; do
+              IMAGE="$reg/$CI_PROJECT_PATH:$tag-$arch"
+              export IMAGE_TAG_WITH_ARCH="$IMAGE_TAG_WITH_ARCH $IMAGE"
+            done
+            docker manifest create $reg/$CI_PROJECT_PATH:$tag $IMAGE_TAG_WITH_ARCH
+            for arch in $ARCHES; do
+              # TODO tidy up
+              EXTRA_ARGS=""
+              if [ "$arch" = "arm64" ]; then
+                EXTRA_ARGS="--variant v8"
+              fi
+              if [ "$arch" = "arm" ]; then
+                EXTRA_ARGS="--variant v7"
+              fi
+              docker manifest annotate $reg/$CI_PROJECT_PATH:$tag $reg/$CI_PROJECT_PATH:$tag-$arch --os linux --arch $arch $EXTRA_ARGS
+            done
+            docker manifest push $reg/$CI_PROJECT_PATH:$tag
+          done
+        done
+
 lint:
   stage: lint
-  image: golang:1.13.10-alpine3.11
+  image: $IMAGE_GOLANG_ALPINE
   allow_failure: true
   before_script:
     - apk add git gcc
