@@ -11,6 +11,10 @@ variables:
   ARCHES: amd64 arm64
   APP_BUILD_VERSION: 0.0.0
   APP_BUILD_MODE: development
+  IMAGE_KANIKO: gcr.io/kaniko-project/executor:debug-v1.3.0
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.17.0-alpine3.14
+  IMAGE_ALPINE: docker.io/alpine:3.14
+  IMAGE_DOCKER: docker.io/docker:20.10.6
 
 .kaniko-build-pre-script: &kaniko-build-pre-script |
   set -x
@@ -54,11 +58,11 @@ variables:
     --build-arg AppBuildMode="$APP_BUILD_MODE"
 
 test:
-  image: golang:1.13.4-buster
+  image: $IMAGE_GOLANG_ALPINE
   stage: test
   before_script:
-    - go get -v -d ./...
-    - go install ./...
+    - go get -v ./...
+    - go install github.com/onsi/ginkgo/v2/ginkgo
     - touch config.yaml
     - go run main.go &
   script:
@@ -67,7 +71,7 @@ test:
 .build-container: &build-container
   stage: build
   image:
-    name: gcr.io/kaniko-project/executor:debug-v1.3.0
+    name: $IMAGE_GOLANG_ALPINE
     entrypoint: [""]
   retry: 2
   before_script:
