@@ -16,7 +16,6 @@ variables:
   IMAGE_GOLANG_ALPINE: docker.io/golang:1.17.0-alpine3.14
   IMAGE_ALPINE: docker.io/alpine:3.14
   IMAGE_DOCKER: docker.io/docker:20.10.6
-  CGO_ENABLED: "0"
 
 .kaniko-build-pre-script: &kaniko-build-pre-script |
   set -x
