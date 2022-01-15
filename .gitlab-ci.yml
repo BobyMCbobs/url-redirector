@@ -69,7 +69,7 @@ test:
     - touch config.yaml
     - go run main.go &
   script:
-    - $GOPATH/bin/ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --progress ./test
+    - $GOPATH/bin/ginkgo -r --randomize-all --randomize-suites --fail-on-pending --cover --trace --race --progress ./test
 
 .build-container: &build-container
   stage: build
