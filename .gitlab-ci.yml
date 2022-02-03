@@ -66,11 +66,12 @@ test:
   before_script:
     - apk add --no-cache git gcc
     - go get -v ./...
-    - go install github.com/onsi/ginkgo/v2/ginkgo
+    - go get github.com/onsi/ginkgo/ginkgo
+    - go get github.com/onsi/gomega/...
     - touch config.yaml
     - go run main.go &
   script:
-    - $GOPATH/bin/ginkgo -r --randomize-all --randomize-suites --fail-on-pending --cover --trace --progress ./test
+    - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
 
 .build-container: &build-container
   stage: build
