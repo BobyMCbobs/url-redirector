@@ -1,0 +1,27 @@
+platform: linux/amd64,linux/arm/v7,linux/arm64/v8
+labels:
+  - maintainer="Caleb Woodbine <calebwoodbine.public@gmail.com>"
+  - org.opencontainers.image.title="url-redirector"
+  - org.opencontainers.image.description="A simple cloud-native golang + yaml URL redirector app"
+  - org.opencontainers.image.url="https://gitlab.com/BobyMCbobs/url-redirector"
+  - org.opencontainers.image.source="git@gitlab.com/BobyMCbobs/url-redirector"
+  - org.opencontainers.image.vendor="BobyMCbobs"
+  - org.opencontainers.image.licenses="AGPL-3.0"
+  - org.opencontainers.image.documentation="https://bobymcbobs.gitlab.io/url-redirector"
+  - org.opencontainers.image.authors="BobyMCbobs"
+builds:
+- id:
+  dir: .
+  main: .
+  env:
+    - CGO_ENABLED=0
+  flags:
+  - -tags
+  - netgo
+  ldflags:
+  - -s -w
+  - -extldflags "-static"
+  - -X gitlab.com/bobymcbobs/url-redirector/pkg/common.AppBuildVersion={{ .Env.APP_BUILD_VERSION }}
+  - -X gitlab.com/bobymcbobs/url-redirector/pkg/common.AppBuildHash={{ .Env.APP_BUILD_HASH }}
+  - -X gitlab.com/bobymcbobs/url-redirector/pkg/common.AppBuildDate={{ .Env.APP_BUILD_DATE }}
+  - -X gitlab.com/bobymcbobs/url-redirector/pkg/common.AppBuildMode={{ .Env.APP_BUILD_MODE }}
