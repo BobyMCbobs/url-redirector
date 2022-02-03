@@ -17,10 +17,8 @@ variables:
 
 .container-registry-login-ko: &container-registry-login-ko |
   ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
-  ko login "docker.io" -u "${DOCKERHUB_USERNAME}" -p "${DOCKERHUB_PASSWORD}"
 
 .image-build-taggable-name: &image-build-taggable-name |
-  set -x
   echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
   export APP_BUILD_HASH="$CI_COMMIT_SHORT_SHA"
   export APP_BUILD_DATE=$(date --date="${CI_COMMIT_TIMESTAMP//[T+]/ }" '+%Y.%m.%d.%H%M')
@@ -60,6 +58,7 @@ build-container:
   variables:
     KO_DOCKER_REPO: "$CI_REGISTRY_IMAGE"
   before_script:
+    - set -x
     - go install github.com/google/ko@latest
     - *container-registry-login-ko
     - *image-build-taggable-name
