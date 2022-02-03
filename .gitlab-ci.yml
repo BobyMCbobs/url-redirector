@@ -76,7 +76,7 @@ test:
 .build-container: &build-container
   stage: build
   image:
-    name: $IMAGE_GOLANG_ALPINE
+    name: $IMAGE_KANIKO
     entrypoint: [""]
   retry: 2
   before_script:
