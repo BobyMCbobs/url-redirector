@@ -1,4 +1,7 @@
-platform: linux/amd64,linux/arm/v7,linux/arm64/v8
+defaultPlatforms:
+  - linux/amd64
+  - linux/arm/v7
+  - linux/arm64/v8
 labels:
   - maintainer="Caleb Woodbine <calebwoodbine.public@gmail.com>"
   - org.opencontainers.image.title="url-redirector"
